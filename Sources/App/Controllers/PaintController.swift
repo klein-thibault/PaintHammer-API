@@ -9,7 +9,10 @@ import Fluent
 import Vapor
 
 struct PaintController: RouteCollection {
-    var paintURLs = ["https://www.scalemates.com/colors/citadel--672"]
+    var paintURLs = [
+        URI("https://www.scalemates.com/colors/citadel--672"),
+        URI("https://www.scalemates.com/colors/scale75--683")
+    ]
 
     func boot(routes: RoutesBuilder) throws {
         let paints = routes.grouped("paints")
@@ -21,17 +24,25 @@ struct PaintController: RouteCollection {
     }
 
     func getPaints(req: Request) throws -> EventLoopFuture<[Paint]> {
-        if let brand = req.parameters.get("brand") {
+        if let brand = try? req.query.decode(GetPaintsQuery.self).brand {
             return Paint.query(on: req.db)
                 .filter(\.$brand == brand)
                 .all()
+        } else {
+            return Paint.query(on: req.db).all()
         }
-
-        return Paint.query(on: req.db).all()
     }
 
-    func storePaints(req: Request) throws -> EventLoopFuture<[Paint]> {
-        let url = URI(string: "https://www.scalemates.com/colors/citadel--672")
+    func storePaints(req: Request) throws -> EventLoopFuture<HTTPStatus> {
+        let queue = EventLoopFutureQueue(eventLoop: req.eventLoop)
+        return paintURLs.map { url in
+            queue.append(downloadAndStorePaints(req: req, url: url))
+        }
+        .flatten(on: req.eventLoop)
+        .transform(to: .ok)
+    }
+
+    private func downloadAndStorePaints(req: Request, url: URI) -> EventLoopFuture<[Paint]> {
         return req.client.get(url)
             .flatMapThrowing { response -> ByteBuffer in
                 guard let body = response.body else {

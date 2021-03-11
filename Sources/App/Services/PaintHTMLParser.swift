@@ -32,7 +32,8 @@ struct PaintHTMLParser {
                 let paintDiv: Element = try paint.select("div").filter { $0.hasClass("ar") }.first!
                 let paintLink: Element = try paintDiv.select("a").first()!
                 var paintName: String = try paintLink.text()
-                paintName.removingRegexMatches(pattern: "[0-9]{2}-[0-9]{2} ")
+                paintName.removingRegexMatches(pattern: "[0-9A-Z]+-[0-9]{2} ")
+                paintName.removingRegexMatches(pattern: "[A-Z]{2}-[0-9]{2} ")
                 paintName.removingRegexMatches(pattern: " \\([a-zA-Z]+\\)")
 
                 let paint = Paint(name: paintName, brand: brand, color: paintColor)
