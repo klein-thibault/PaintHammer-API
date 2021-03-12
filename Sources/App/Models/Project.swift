@@ -15,4 +15,11 @@ final class Project: Model, Content {
 
     @Children(for: \.$project)
     var steps: [Step]
+
+    init() { }
+
+    init(name: String, image: String?) {
+        self.name = name
+        self.image = image
+    }
 }

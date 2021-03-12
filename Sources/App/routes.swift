@@ -7,4 +7,5 @@ func routes(_ app: Application) throws {
     }
 
     try app.register(collection: PaintController())
+    try app.register(collection: ProjectController())
 }
