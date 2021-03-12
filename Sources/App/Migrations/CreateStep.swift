@@ -7,6 +7,7 @@ struct CreateStep: Migration {
             .field("description", .string, .required)
             .field("image", .string)
             .field("paint_id", .uuid, .references("paints", "id"))
+            .field("project_id", .uuid, .required, .references("projects", "id"))
             .create()
     }
 

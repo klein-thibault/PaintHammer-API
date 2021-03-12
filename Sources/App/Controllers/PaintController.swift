@@ -1,10 +1,3 @@
-//
-//  PaintController.swift
-//  
-//
-//  Created by Thibault Klein on 3/4/21.
-//
-
 import Fluent
 import Vapor
 

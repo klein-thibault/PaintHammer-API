@@ -16,5 +16,8 @@ final class Step: Model, Content {
     @OptionalParent(key: "paint_id")
     var paint: Paint?
 
+    @Parent(key: "project_id")
+    var project: Project
+
     init() { }
 }
