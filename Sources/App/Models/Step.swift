@@ -20,4 +20,9 @@ final class Step: Model, Content {
     var project: Project
 
     init() { }
+
+    init(description: String, image: String?) {
+        self.description = description
+        self.image = image
+    }
 }
