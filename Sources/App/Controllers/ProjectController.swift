@@ -6,8 +6,10 @@ struct ProjectController: RouteCollection {
         let projects = routes.grouped("projects")
         projects.get(use: getProjects)
         projects.get(":projectId", use: getProjectById)
+        projects.delete(":projectId", use: deleteProject)
         projects.post(use: createProject)
         projects.post(":projectId", "steps", use: addStepToProject)
+        projects.delete(":projectId", "steps", ":stepId", use: deleteStepFromProject)
     }
 
     func getProjects(req: Request) throws -> EventLoopFuture<[Project]> {
@@ -50,5 +52,21 @@ struct ProjectController: RouteCollection {
                 }
                 return project.$steps.create(step, on: req.db).map { project }
             }
+    }
+
+    func deleteStepFromProject(req: Request) throws -> EventLoopFuture<HTTPStatus> {
+        let stepId: UUID = req.parameters.get("stepId")!
+
+        return Step.find(stepId, on: req.db)
+            .map { $0?.delete(on: req.db) }
+            .transform(to: .ok)
+    }
+
+    func deleteProject(req: Request) throws -> EventLoopFuture<HTTPStatus> {
+        let projectId: UUID = req.parameters.get("projectId")!
+
+        return Project.find(projectId, on: req.db)
+            .map { $0?.delete(on: req.db) }
+            .transform(to: .ok)
     }
 }
