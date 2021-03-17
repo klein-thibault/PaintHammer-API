@@ -33,7 +33,7 @@ struct ProjectController: RouteCollection {
         return project.create(on: req.db).map { project }
     }
 
-    func addStepToProject(req: Request) throws -> EventLoopFuture<Step> {
+    func addStepToProject(req: Request) throws -> EventLoopFuture<Project> {
         let projectId: UUID = req.parameters.get("projectId")!
         let body = try req.content.decode(CreateStepRequestBody.self)
 
@@ -47,10 +47,11 @@ struct ProjectController: RouteCollection {
 
                 return project.$steps.create(step, on: req.db)
                     .flatMap {
-                        let stepId = try! step.requireID()
-                        return Step.query(on: req.db)
-                            .filter(\.$id == stepId)
-                            .with(\.$paint)
+                        return Project.query(on: req.db)
+                            .filter(\.$id == projectId)
+                            .with(\.$steps) { step in
+                                step.with(\.$paint)
+                            }
                             .first()
                             .unwrap(or: Abort(.internalServerError))
                     }
