@@ -47,23 +47,23 @@ struct ProjectController: RouteCollection {
 
                 return project.$steps.create(step, on: req.db)
                     .flatMap {
-                        return Project.query(on: req.db)
-                            .filter(\.$id == projectId)
-                            .with(\.$steps) { step in
-                                step.with(\.$paint)
-                            }
-                            .first()
-                            .unwrap(or: Abort(.internalServerError))
+                        return findProjectById(req: req, projectId: projectId)
                     }
             }
     }
 
-    func deleteStepFromProject(req: Request) throws -> EventLoopFuture<HTTPStatus> {
+    func deleteStepFromProject(req: Request) throws -> EventLoopFuture<Project> {
+        let projectId: UUID = req.parameters.get("projectId")!
         let stepId: UUID = req.parameters.get("stepId")!
 
         return Step.find(stepId, on: req.db)
-            .map { $0?.delete(on: req.db) }
-            .transform(to: .ok)
+            .unwrap(or: Abort(.notFound))
+            .flatMap { step in
+                return step.delete(on: req.db)
+            }
+            .flatMap { _ in
+                return findProjectById(req: req, projectId: projectId)
+            }
     }
 
     func deleteProject(req: Request) throws -> EventLoopFuture<HTTPStatus> {
@@ -72,5 +72,15 @@ struct ProjectController: RouteCollection {
         return Project.find(projectId, on: req.db)
             .map { $0?.delete(on: req.db) }
             .transform(to: .ok)
+    }
+
+    private func findProjectById(req: Request, projectId: UUID) -> EventLoopFuture<Project> {
+        return Project.query(on: req.db)
+            .filter(\.$id == projectId)
+            .with(\.$steps) { step in
+                step.with(\.$paint)
+            }
+            .first()
+            .unwrap(or: Abort(.internalServerError))
     }
 }
