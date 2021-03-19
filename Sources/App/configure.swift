@@ -1,11 +1,18 @@
 import Fluent
 import FluentPostgresDriver
+import SotoS3
 import Vapor
 
 // configures your application
 public func configure(_ app: Application) throws {
     // uncomment to serve files from /Public folder
     // app.middleware.use(FileMiddleware(publicDirectory: app.directory.publicDirectory))
+
+    let accessKeyId = Environment.get("AWS_ACCESS_KEY_ID") ?? ""
+    let secretAccessKey = Environment.get("AWS_SECRET_ACCESS_KEY") ?? ""
+    app.aws.client = AWSClient(credentialProvider: .static(accessKeyId: accessKeyId, secretAccessKey: secretAccessKey),
+                               httpClientProvider: .shared(app.http.client.shared))
+    app.aws.s3 = S3(client: app.aws.client, region: .useast1)
 
     if let databaseURL = Environment.get("DATABASE_URL"),
        var postgresConfig = PostgresConfiguration(url: databaseURL) {
