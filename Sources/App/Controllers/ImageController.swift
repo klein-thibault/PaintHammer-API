@@ -2,6 +2,8 @@ import Fluent
 import SotoS3
 import Vapor
 
+// Inspired by this article about using Vapor and AWS S3 with Lambda function
+// https://fivedottwelve.com/blog/using-amazon-s3-with-vapor/
 struct ImageController: RouteCollection {
     let bucket = "painthammer"
     let url = "https://painthammer.s3.amazonaws.com"

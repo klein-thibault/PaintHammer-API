@@ -23,7 +23,12 @@ struct ProjectController: RouteCollection {
     func getProjectById(req: Request) throws -> EventLoopFuture<Project> {
         let projectId: UUID = req.parameters.get("projectId")!
 
-        return Project.find(projectId, on: req.db)
+        return Project.query(on: req.db)
+            .with(\.$steps) { step in
+                step.with(\.$paint)
+            }
+            .filter(\.$id == projectId)
+            .first()
             .unwrap(or: Abort(.notFound))
     }
 
@@ -52,6 +57,7 @@ struct ProjectController: RouteCollection {
             }
     }
 
+    // TODO: delete image in S3
     func deleteStepFromProject(req: Request) throws -> EventLoopFuture<Project> {
         let projectId: UUID = req.parameters.get("projectId")!
         let stepId: UUID = req.parameters.get("stepId")!
