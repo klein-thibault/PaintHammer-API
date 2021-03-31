@@ -10,9 +10,7 @@ struct PaintController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
         let paints = routes.grouped("paints")
         paints.get(use: getPaints)
-        paints.get("test") { req in
-            return "It works!"
-        }
+        paints.get("brands", use: getPaintBrands)
         paints.post("seed", use: storePaints)
     }
 
@@ -24,6 +22,15 @@ struct PaintController: RouteCollection {
         } else {
             return Paint.query(on: req.db).all()
         }
+    }
+
+    func getPaintBrands(req: Request) throws -> EventLoopFuture<[String]> {
+        return Paint.query(on: req.db)
+            .all(\.$brand)
+            .map { brands in
+                let set = Set(brands)
+                return Array(set)
+            }
     }
 
     func storePaints(req: Request) throws -> EventLoopFuture<HTTPStatus> {
