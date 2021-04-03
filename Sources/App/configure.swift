@@ -8,6 +8,8 @@ public func configure(_ app: Application) throws {
     // uncomment to serve files from /Public folder
     // app.middleware.use(FileMiddleware(publicDirectory: app.directory.publicDirectory))
 
+    app.passwords.use(.bcrypt)
+
     let accessKeyId = Environment.get("AWS_ACCESS_KEY_ID") ?? ""
     let secretAccessKey = Environment.get("AWS_SECRET_ACCESS_KEY") ?? ""
     app.aws.client = AWSClient(credentialProvider: .static(accessKeyId: accessKeyId, secretAccessKey: secretAccessKey),
@@ -31,6 +33,8 @@ public func configure(_ app: Application) throws {
     app.migrations.add(CreatePaint())
     app.migrations.add(CreateProject())
     app.migrations.add(CreateStep())
+    app.migrations.add(CreateUser())
+    app.migrations.add(CreateUserToken())
 
     // register routes
     try routes(app)
