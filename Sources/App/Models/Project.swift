@@ -16,6 +16,9 @@ final class Project: Model, Content {
     @Children(for: \.$project)
     var steps: [Step]
 
+    @Parent(key: "user_id")
+    var user: UserModel
+
     init() { }
 
     init(name: String, image: String?) {
