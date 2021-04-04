@@ -1,4 +1,5 @@
 import Fluent
+import JWT
 import Vapor
 
 struct UserController: RouteCollection {
@@ -13,7 +14,7 @@ struct UserController: RouteCollection {
 
         return req.password.async.hash(body.password)
             .flatMap { digest in
-                return User(email: body.email, password: digest)
+                return UserModel(email: body.email, password: digest)
                     .save(on: req.db)
             }
             .transform(to: .ok)
@@ -22,33 +23,22 @@ struct UserController: RouteCollection {
     func login(req: Request) throws -> EventLoopFuture<UserToken> {
         let body = try req.content.decode(CreateUserRequestBody.self)
 
-        return User.query(on: req.db)
+        return UserModel.query(on: req.db)
             .filter(\.$email == body.email)
             .first()
             .unwrap(orError: Abort(.notFound))
             .flatMap { user in
                 return req.password.async.verify(body.password, created: user.password)
-                    .flatMapThrowing{ isValid -> Bool in
+                    .flatMapThrowing{ isValid in
                         guard isValid else {
                             throw Abort(.notFound)
                         }
 
-                        return isValid
-                    }
-                    .flatMap { _ -> EventLoopFuture<UserToken> in
-                        return UserToken.query(on: req.db)
-                            .filter(\.$user.$id == user.id!)
-                            .first()
-                            .flatMap { token in
-                                if let token = token {
-                                    return req.eventLoop.makeSucceededFuture(token)
-                                } else {
-                                    let newToken = UserToken(value: UUID().uuidString, userId: user.id!)
-                                    return newToken
-                                        .create(on: req.db)
-                                        .map { _ in newToken }
-                                }
-                            }
+                        let jwt = PaintHammerJWT(subject: SubjectClaim(value: user.id!.uuidString),
+                                                 expiration: .init(value: .distantFuture),
+                                                 isAdmin: true)
+                        let signedJWT = try req.jwt.sign(jwt)
+                        return UserToken(token: signedJWT)
                     }
             }
     }

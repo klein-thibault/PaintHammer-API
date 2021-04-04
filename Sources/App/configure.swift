@@ -1,5 +1,6 @@
 import Fluent
 import FluentPostgresDriver
+import JWT
 import SotoS3
 import Vapor
 
@@ -9,6 +10,8 @@ public func configure(_ app: Application) throws {
     // app.middleware.use(FileMiddleware(publicDirectory: app.directory.publicDirectory))
 
     app.passwords.use(.bcrypt)
+    // Add HMAC with SHA-256 signer.
+    app.jwt.signers.use(.hs256(key: "secret"))
 
     let accessKeyId = Environment.get("AWS_ACCESS_KEY_ID") ?? ""
     let secretAccessKey = Environment.get("AWS_SECRET_ACCESS_KEY") ?? ""
@@ -34,7 +37,6 @@ public func configure(_ app: Application) throws {
     app.migrations.add(CreateProject())
     app.migrations.add(CreateStep())
     app.migrations.add(CreateUser())
-    app.migrations.add(CreateUserToken())
 
     // register routes
     try routes(app)

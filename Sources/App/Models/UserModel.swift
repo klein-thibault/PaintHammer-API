@@ -1,5 +1,5 @@
 //
-//  User.swift
+//  UserModel.swift
 //  
 //
 //  Created by Thibault Klein on 4/3/21.
@@ -8,7 +8,7 @@
 import Fluent
 import Vapor
 
-final class User: Model {
+final class UserModel: Model, Authenticatable {
     static let schema = "users"
 
     @ID(key: .id)

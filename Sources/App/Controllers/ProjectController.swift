@@ -1,9 +1,11 @@
 import Fluent
+import JWT
 import Vapor
 
 struct ProjectController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
-        let projects = routes.grouped("projects")
+        let secure = routes.grouped(JWTUserModelBearerAuthenticator(), UserModel.guardMiddleware())
+        let projects = secure.grouped("projects")
         projects.get(use: getProjects)
         projects.get(":projectId", use: getProjectById)
         projects.delete(":projectId", use: deleteProject)
@@ -13,6 +15,7 @@ struct ProjectController: RouteCollection {
     }
 
     func getProjects(req: Request) throws -> EventLoopFuture<[Project]> {
+        let user = try req.auth.require(UserModel.self)
         return Project.query(on: req.db)
             .with(\.$steps) { step in
                 step.with(\.$paint)
