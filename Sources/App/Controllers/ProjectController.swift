@@ -27,12 +27,15 @@ struct ProjectController: RouteCollection {
 
     func getProjectById(req: Request) throws -> EventLoopFuture<Project> {
         let projectId: UUID = req.parameters.get("projectId")!
+        let user = try req.auth.require(UserModel.self)
+        let userId = try user.requireID()
 
         return Project.query(on: req.db)
             .with(\.$steps) { step in
                 step.with(\.$paint)
             }
             .filter(\.$id == projectId)
+            .filter(\.$user.$id == userId)
             .first()
             .unwrap(or: Abort(.notFound))
     }
