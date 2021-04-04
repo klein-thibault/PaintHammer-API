@@ -15,7 +15,6 @@ struct ProjectController: RouteCollection {
     }
 
     func getProjects(req: Request) throws -> EventLoopFuture<[Project]> {
-        let user = try req.auth.require(UserModel.self)
         return Project.query(on: req.db)
             .with(\.$steps) { step in
                 step.with(\.$paint)
@@ -37,7 +36,8 @@ struct ProjectController: RouteCollection {
 
     func createProject(req: Request) throws -> EventLoopFuture<Project> {
         let body = try req.content.decode(CreateProjectRequestBody.self)
-        let project = Project(name: body.name, image: body.image)
+        let user = try req.auth.require(UserModel.self)
+        let project = Project(name: body.name, image: body.image, userId: try user.requireID())
         return project.create(on: req.db).map { project }
     }
 

@@ -21,8 +21,9 @@ final class Project: Model, Content {
 
     init() { }
 
-    init(name: String, image: String?) {
+    init(name: String, image: String?, userId: UserModel.IDValue) {
         self.name = name
         self.image = image
+        self.$user.id = userId
     }
 }
