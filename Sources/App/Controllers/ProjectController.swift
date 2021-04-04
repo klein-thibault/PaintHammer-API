@@ -15,7 +15,10 @@ struct ProjectController: RouteCollection {
     }
 
     func getProjects(req: Request) throws -> EventLoopFuture<[Project]> {
+        let user = try req.auth.require(UserModel.self)
+        let userId = try user.requireID()
         return Project.query(on: req.db)
+            .filter(\.$user.$id == userId)
             .with(\.$steps) { step in
                 step.with(\.$paint)
             }
