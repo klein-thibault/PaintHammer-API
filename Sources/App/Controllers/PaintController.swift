@@ -4,7 +4,8 @@ import Vapor
 struct PaintController: RouteCollection {
     var paintURLs = [
         URI("https://www.scalemates.com/colors/citadel--672"),
-        URI("https://www.scalemates.com/colors/scale75--683")
+        URI("https://www.scalemates.com/colors/scale75--683"),
+        URI("https://www.scalemates.com/colors/vallejo-model-color--827")
     ]
 
     func boot(routes: RoutesBuilder) throws {
@@ -29,7 +30,7 @@ struct PaintController: RouteCollection {
             .all(\.$brand)
             .map { brands in
                 let set = Set(brands)
-                return Array(set)
+                return Array(set).sorted()
             }
     }
 
